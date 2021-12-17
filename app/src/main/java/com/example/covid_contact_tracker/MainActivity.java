@@ -14,14 +14,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     int REQUEST_ENABLE_BT = 0;
     TextView bt;
     BluetoothAdapter ba;
+    ArrayList<Map<String,String>> devicesList;
+    Map<String,String> deviceDetails;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
@@ -31,22 +38,32 @@ public class MainActivity extends AppCompatActivity {
         if(ba == null){
             Toast.makeText( this, "Bluetooth unsupported on this device", Toast.LENGTH_SHORT ).show();
         }else{
-            if(!ba.isEnabled()){
+            Log.d("Bluetooth","BA not null");
+            devicesList = new ArrayList<>();
+            deviceDetails = new HashMap<>();
+            IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND);
+            registerReceiver(receiver, filter);
+            ba.startDiscovery();
+            /*if(!ba.isEnabled()){
                 Log.d("Bluetooth","Bluetooth supported");
                 Intent enableBt = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult( enableBt,REQUEST_ENABLE_BT );
-            }
+            }*/
+
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Intent enableBt = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult( enableBt,REQUEST_ENABLE_BT );
+        /*Intent enableBt = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult( enableBt,REQUEST_ENABLE_BT );*/
+        IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND);
+        registerReceiver(receiver, filter);
+        ba.startDiscovery();
     }
 
-    @Override
+    /*@Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult( requestCode, resultCode, data );
         if(resultCode == -1){
@@ -60,11 +77,13 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Bluetooth","Bluetooth disabled");
             Toast.makeText( this, "Bluetooth disabled", Toast.LENGTH_SHORT ).show();
         }
-    }
+    }*/
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d("Bluetooth","Receiving");
+            Toast.makeText( MainActivity.this, "Receiving", Toast.LENGTH_SHORT ).show();
             String action = intent.getAction();
             String str = "";
             if(BluetoothDevice.ACTION_FOUND.equals( action )){
@@ -73,10 +92,25 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String deviceName = device.getName();
                 int deviceType = device.getType();
-                BluetoothClass bs = device.getBluetoothClass();
-                str+=deviceName+": "+deviceType+"\n";
+                //BluetoothClass bs = device.getBluetoothClass();
+                String BclassS = "";
+                int Bclass = device.getBluetoothClass().getDeviceClass();
+                if(Bclass>=412 && Bclass<=612){
+                    BclassS = "Phone";
+                }else{
+                    BclassS = "Uncategorized";
+                }
+                String mac = device.getAddress();
+                str+=deviceName+": "+deviceType+": "+mac+": "+Bclass+"\n";
+                deviceDetails.put( "Device Name: ",deviceName );
+                deviceDetails.put("Device Type",Integer.toString( deviceType));
+                deviceDetails.put( "Bluetooth Class: ",BclassS);
+                deviceDetails.put( "Device MAC: ",mac );
+                if(!devicesList.contains( deviceDetails )){
+                    devicesList.add( deviceDetails );
+                }
 
-                bt.setText( str );
+                bt.setText( devicesList.toString() );
             }
         }
 
@@ -85,5 +119,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy(){
         super.onDestroy();
         unregisterReceiver( receiver );
+    }
+    public void discoverBt(View view){
+        Log.d("Bluetooth","Bluetooth restarted");
+        devicesList = new ArrayList<>();
+        deviceDetails = new HashMap<>();
+        unregisterReceiver( receiver );
+        IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND);
+        registerReceiver(receiver, filter);
+        ba.startDiscovery();
     }
 }
