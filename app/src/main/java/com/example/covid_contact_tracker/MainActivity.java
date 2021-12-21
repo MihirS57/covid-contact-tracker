@@ -90,21 +90,25 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Bluetooth","Bluetooth started");
                 Toast.makeText( context, "Started", Toast.LENGTH_SHORT ).show();
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
                 short rssiMin = intent.getShortExtra( BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE );
-                short rssiMax = intent.getShortExtra( BluetoothDevice.EXTRA_RSSI,Short.MAX_VALUE );
+
+                //short rssiMax = intent.getShortExtra( BluetoothDevice.EXTRA_RSSI,Short.MAX_VALUE );
                 //Toast.makeText( MainActivity.this, "RSSI: "+rssiMin+", "+rssiMax, Toast.LENGTH_SHORT ).show();
                 String deviceName = device.getName();
                 int deviceType = device.getType();
+                String mac = device.getAddress();
                 //BluetoothClass bs = device.getBluetoothClass();
                 String BclassS = "";
                 int Bclass = device.getBluetoothClass().getDeviceClass();
                 if(Bclass>=412 && Bclass<=612){
                     BclassS = "Phone";
+
                 }else{
                     BclassS = "Uncategorized";
                 }
-                String mac = device.getAddress();
-                addToDiscoveredList( deviceName,mac,rssiMin );
+                addToDiscoveredList( deviceName,BclassS,mac,rssiMin );
+
 
             }
         }
@@ -117,27 +121,31 @@ public class MainActivity extends AppCompatActivity {
     }
     public void discoverBt(View view){
         Log.d("Bluetooth","Bluetooth restarted");
-        devicesList = new ArrayList<>();
-        deviceDetails = new HashMap<>();
+        //devicesList = new ArrayList<>();
+        //deviceDetails = new HashMap<>();
         unregisterReceiver( receiver );
         IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND);
         registerReceiver(receiver, filter);
         ba.startDiscovery();
     }
 
-    public void addToDiscoveredList(String name, String mac, short rssi){
+    public void addToDiscoveredList(String name, String Bclass,String mac, short rssi){
         deviceDetails.clear();
         if(name!=null){
             deviceDetails.put("Name",name );
             deviceDetails.put("MAC",mac );
+            deviceDetails.put("Class",Bclass );
             if(rssi<=0 && rssi>=-50){
-                deviceDetails.put("Proximity","NEAR" );
+                deviceDetails.put("Proximity","CLOSE ("+rssi+")" );
+            }else if(rssi >= -70){
+                deviceDetails.put("Proximity","NEAR ("+rssi+")" );
             }else{
-                deviceDetails.put("Proximity","FAR" );
+                deviceDetails.put("Proximity","FAR ("+rssi+")" );
             }
-
-            devicesList.add( deviceDetails );
-            bt.setText( devicesList.toString() );
+            //devicesList.add( deviceDetails );
+            String before = (String) bt.getText();
+            String result = deviceDetails.toString()+"\n"+before;
+            bt.setText( result );
         }else{
             Toast.makeText( MainActivity.this, "Almost there", Toast.LENGTH_SHORT ).show();
         }

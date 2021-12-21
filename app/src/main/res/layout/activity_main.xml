@@ -10,24 +10,26 @@
         android:id="@+id/bluetooth_devices"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/discover"
+        android:layout_above="@+id/discover"
         android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="47dp"
-        android:text="TextView" />
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="36dp"
+        android:layout_marginBottom="15dp"
+        android:text="Discovered Devices" />
 
     <Button
         android:id="@+id/discover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="155dp"
-        android:layout_marginTop="34dp"
-        android:layout_marginEnd="147dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="151dp"
+        android:layout_marginEnd="151dp"
+        android:layout_marginBottom="20dp"
         android:onClick="discoverBt"
         android:text="Discover" />
 </RelativeLayout>
