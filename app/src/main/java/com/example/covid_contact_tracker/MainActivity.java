@@ -90,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Bluetooth","Bluetooth started");
                 Toast.makeText( context, "Started", Toast.LENGTH_SHORT ).show();
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                short rssiMin = intent.getShortExtra( BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE );
+                short rssiMax = intent.getShortExtra( BluetoothDevice.EXTRA_RSSI,Short.MAX_VALUE );
+                //Toast.makeText( MainActivity.this, "RSSI: "+rssiMin+", "+rssiMax, Toast.LENGTH_SHORT ).show();
                 String deviceName = device.getName();
                 int deviceType = device.getType();
                 //BluetoothClass bs = device.getBluetoothClass();
@@ -101,16 +104,8 @@ public class MainActivity extends AppCompatActivity {
                     BclassS = "Uncategorized";
                 }
                 String mac = device.getAddress();
-                str+=deviceName+": "+deviceType+": "+mac+": "+Bclass+"\n";
-                deviceDetails.put( "Device Name: ",deviceName );
-                deviceDetails.put("Device Type",Integer.toString( deviceType));
-                deviceDetails.put( "Bluetooth Class: ",BclassS);
-                deviceDetails.put( "Device MAC: ",mac );
-                if(!devicesList.contains( deviceDetails )){
-                    devicesList.add( deviceDetails );
-                }
+                addToDiscoveredList( deviceName,mac,rssiMin );
 
-                bt.setText( devicesList.toString() );
             }
         }
 
@@ -128,5 +123,25 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND);
         registerReceiver(receiver, filter);
         ba.startDiscovery();
+    }
+
+    public void addToDiscoveredList(String name, String mac, short rssi){
+        deviceDetails.clear();
+        if(name!=null){
+            deviceDetails.put("Name",name );
+            deviceDetails.put("MAC",mac );
+            if(rssi<=0 && rssi>=-50){
+                deviceDetails.put("Proximity","NEAR" );
+            }else{
+                deviceDetails.put("Proximity","FAR" );
+            }
+
+            devicesList.add( deviceDetails );
+            bt.setText( devicesList.toString() );
+        }else{
+            Toast.makeText( MainActivity.this, "Almost there", Toast.LENGTH_SHORT ).show();
+        }
+
+
     }
 }
