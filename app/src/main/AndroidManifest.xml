@@ -2,10 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.covid_contact_tracker">
 
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
-
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
-
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
@@ -34,6 +35,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Covidcontacttracker">
+        <activity
+            android:name=".MotionDetection"
+            android:exported="false" />
         <activity
             android:name=".BLEScanActivity"
             android:exported="false" />

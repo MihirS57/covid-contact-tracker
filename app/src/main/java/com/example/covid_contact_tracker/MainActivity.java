@@ -42,5 +42,10 @@ public class MainActivity extends AppCompatActivity {
         startActivity( launchBle );
     }
 
+    public void launchMtnDetector(View v){
+        Intent launchMtn = new Intent(MainActivity.this, MotionDetection.class);
+        startActivity( launchMtn );
+    }
+
 
 }

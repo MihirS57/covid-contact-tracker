@@ -7,3 +7,5 @@ https://developer.android.com/reference/android/location/Location
 https://developer.android.com/guide/topics/connectivity/bluetooth/permissions
 https://developer.android.com/guide/topics/connectivity/bluetooth/find-ble-devices
 https://developer.android.com/guide/topics/connectivity/bluetooth/ble-overview
+https://www.vogella.com/tutorials/AndroidSensor/article.html
+https://developer.android.com/reference/android/hardware/SensorManager.html
