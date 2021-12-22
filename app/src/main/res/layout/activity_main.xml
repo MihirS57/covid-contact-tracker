@@ -11,11 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/discover"
+        android:layout_below="@+id/blediscover"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="36dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="15dp"
         android:layout_marginEnd="36dp"
         android:layout_marginBottom="15dp"
         android:text="Discovered Devices" />
@@ -32,4 +32,17 @@
         android:layout_marginBottom="20dp"
         android:onClick="discoverBt"
         android:text="Discover" />
+
+    <Button
+        android:id="@+id/blediscover"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="151dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="151dp"
+        android:onClick="BleDiscover"
+        android:text="BLE Discover" />
 </RelativeLayout>

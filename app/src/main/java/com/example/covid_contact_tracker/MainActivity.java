@@ -129,6 +129,11 @@ public class MainActivity extends AppCompatActivity {
         ba.startDiscovery();
     }
 
+    public void BleDiscover(View v){
+        Intent launchBle = new Intent(MainActivity.this,BLEScanActivity.class);
+        startActivity( launchBle );
+    }
+
     public void addToDiscoveredList(String name, String Bclass,String mac, short rssi){
         deviceDetails.clear();
         if(name!=null){

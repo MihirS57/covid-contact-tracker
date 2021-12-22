@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.covid_contact_tracker">
-    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" />
 
-    <!-- Needed only if your app looks for Bluetooth devices.
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="true" />
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <!--
+ Needed only if your app looks for Bluetooth devices.
          If your app doesn't use Bluetooth scan results to derive physical
          location information, you can strongly assert that your app
-         doesn't derive physical location. -->
+         doesn't derive physical location.
+    -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-
-    <!-- Needed only if your app makes the device discoverable to Bluetooth
-         devices. -->
+    <!--
+ Needed only if your app makes the device discoverable to Bluetooth
+         devices.
+    -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
@@ -26,6 +34,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Covidcontacttracker">
+        <activity
+            android:name=".BLEScanActivity"
+            android:exported="false" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,7 +44,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".BroadcastBluetoothState"  android:exported="true">
+
+        <receiver
+            android:name=".BroadcastBluetoothState"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_FOUND" />
             </intent-filter>
