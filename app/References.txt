@@ -1,0 +1,9 @@
+https://developer.android.com/guide/topics/connectivity/bluetooth/find-bluetooth-devices#java
+https://developer.android.com/reference/android/bluetooth/BluetoothAdapter
+https://bluetoothle.wiki/rssi
+https://developer.android.com/guide/topics/sensors/sensors_position
+https://stackoverflow.com/questions/7594221/how-to-get-altitude-in-android/30500053
+https://developer.android.com/reference/android/location/Location
+https://developer.android.com/guide/topics/connectivity/bluetooth/permissions
+https://developer.android.com/guide/topics/connectivity/bluetooth/find-ble-devices
+https://developer.android.com/guide/topics/connectivity/bluetooth/ble-overview

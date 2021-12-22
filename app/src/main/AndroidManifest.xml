@@ -37,6 +37,9 @@
         <activity
             android:name=".BLEScanActivity"
             android:exported="false" />
+        <activity
+            android:name=".NormScanActivity"
+            android:exported="false" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
