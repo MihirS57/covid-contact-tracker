@@ -16,13 +16,17 @@ import android.widget.Toast;
 
 public class MotionDetection extends AppCompatActivity implements SensorEventListener {
 
-    private SensorManager sensorManager;
-    private Sensor sensor;
+    private SensorManager sensorManager,step_sensorManager;
+    private Sensor sensor,step_sensor;
     private float[] gravity,linear_acceleration, hist_accl;
     TextView sensorData,currData,dirData;
     boolean registered = true;
 
-    int sample_rate = 3,sampled=1;
+    String index = SensorManager.SENSOR_STATUS_ACCURACY_HIGH+"\n"+
+            SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM+"\n"+
+            SensorManager.SENSOR_STATUS_ACCURACY_LOW+"\n"+
+            SensorManager.SENSOR_STATUS_UNRELIABLE;
+    //int sample_rate = 3,sampled=1;
 
     long t1=0,t2=0;
     float v1=0;
@@ -31,7 +35,10 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
 
     int sensorDataCount = 0,timerSec = 0;
     int smoothCnt=6;
-    String temp = "";
+    int steps = 0;
+
+    float initTS = 0.0F,finalTS = 0.0F;
+
     /*
     Calculated by first estimating the rate of output of the accelerometer and comparing it with the
     time required for the subject foot to return to initial position
@@ -46,7 +53,15 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         currData = findViewById( R.id.current_sensorData );
         dirData = findViewById( R.id.direction_data );
         sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE);
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
+        step_sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE);
+        step_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_STEP_DETECTOR );
+        if(step_sensor == null){
+            Toast.makeText( MotionDetection.this, "Step Sensor down", Toast.LENGTH_SHORT ).show();
+        }else{
+            Toast.makeText( MotionDetection.this, "Step Sensor Alive", Toast.LENGTH_SHORT ).show();
+            sensorManager.registerListener(this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        /*if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
             sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
             sensorDataCount = 0;
@@ -58,14 +73,13 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
             hist_accl = new float[smoothCnt];
             //runTimer();
             Log.d("Motion","Launched");
-            String index = SensorManager.SENSOR_STATUS_ACCURACY_HIGH+"\n"+
-                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM+"\n"+
-                    SensorManager.SENSOR_STATUS_ACCURACY_LOW+"\n"+
-                    SensorManager.SENSOR_STATUS_UNRELIABLE;
-            dirData.setText( index );
+
+            //dirData.setText( index );
         }else{
             Toast.makeText( MotionDetection.this, "Accelerometer unavailable", Toast.LENGTH_SHORT ).show();
         }
+
+         */
 
     }
 
@@ -83,13 +97,36 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         if(!registered) {
             registered = true;
             sensorManager.registerListener( this, sensor, SensorManager.SENSOR_DELAY_NORMAL );
-
+            sensorManager.registerListener( this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL );
             Log.d( "Motion", "Sensor Registered" );
         }
     }
 
     public void clearText(View v){
         sensorData.setText("");
+    }
+
+    public void onSensorChanged(SensorEvent event){
+        if(event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
+            if(initTS == 0.0F){
+                initTS = event.timestamp/1000000L;
+            }else {
+                float delay = (event.timestamp / 1000000L) - initTS;
+                sensorData.setText( (event.timestamp / 1000000L) + " - " + initTS + " = " + delay + "\n" + sensorData.getText() );
+
+                initTS = event.timestamp / 1000000L;
+            }
+        }
+        /*else {
+            if (event.accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
+                linear_acceleration = preprocessSensorData( event.values );
+                currData.setText( linear_acceleration[0] + "\n" + linear_acceleration[1] + "\n" + linear_acceleration[2] );
+                sensorData.setText( linear_acceleration[2] + "\n" + sensorData.getText() );
+
+            }
+        }
+
+         */
     }
 
     /*public void runTimer(){
@@ -117,20 +154,24 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
     }*/
 
     public float[] preprocessSensorData(float[] values){
-        // In this example, alpha is calculated as t / (t + dT),
-        // where t is the low-pass filter's time-constant and
-        // dT is the event delivery rate.
+
         final float alpha = (float) 0.8;
         Log.d("Motion","Data Changed");
 
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
+        /*gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
         gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];*/
 
-        // Remove the gravity contribution with the high-pass filter.
-        linear_acceleration[0] = (float)(Math.round((values[0] - gravity[0])*10.0)/10.0);
-        linear_acceleration[1] = (float)(Math.round((values[1] - gravity[1])*10.0)/10.0);
-        linear_acceleration[2] = (float)(Math.round((values[2] - gravity[2])*10.0)/10.0);
+        gravity[0] = 9.8F;
+        gravity[1] = 9.8F;
+        gravity[2] = 9.8F;
+
+        //dirData.setText( values[0]+", "+gravity[0]+"\n"+values[1]+", "+gravity[1]+"\n"+values[2]+", "+gravity[2] );
+        linear_acceleration[0] = (float)(Math.round((values[0] )*10.0)/10.0);
+        linear_acceleration[1] = (float)(Math.round((values[1] )*10.0)/10.0);
+        linear_acceleration[2] = (float)(Math.round((values[2] )*10.0)/10.0);
+
+
         return linear_acceleration;
     }
 
@@ -142,7 +183,7 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         return accl;
     }
 
-    public double getSmoothAvg(){
+    public double getSmoothAvg(){   //MAA
         float sum= 0.0F;
         int count = 0;
         for(int i =0 ;i<smoothCnt;i++){
@@ -152,7 +193,8 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
                 count++;
             }
         }
-        return Math.round(((sum/smoothCnt)/smoothCnt)*10.0)/10.0;
+        //return Math.round(((sum/smoothCnt)/smoothCnt)*10.0)/10.0;
+        return Math.round((sum/smoothCnt)*10.0)/10.0;
     }
 
     public boolean stoppedOrNot(float[] accl){
@@ -168,12 +210,15 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
             return false;
         }
     }
-    public void onSensorChanged(SensorEvent event){
+
+
+
+    /*public void onSensorChanged(SensorEvent event){
         int acc = event.accuracy;
 
         if(event.accuracy>=SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
             linear_acceleration = preprocessSensorData( event.values );
-            float cumu_acceleration = calculateAcc( linear_acceleration );
+            /*float cumu_acceleration = calculateAcc( linear_acceleration );
             if (sensorDataCount > (smoothCnt - 1)) {
                 double smooth_accl = getSmoothAvg();
                 Log.d( "Acceleration First", String.valueOf( smooth_accl ) );
@@ -190,10 +235,12 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
                 sensorDataCount++;
             }
 
+
+
         }else{
             sensorData.setText( "Low Accuracy"+sensorData.getText() );
         }
-    }
+    }*/
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
@@ -209,7 +256,8 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         registered = true;
         //running = false;
         //runTimer();
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     protected void onPause() {
