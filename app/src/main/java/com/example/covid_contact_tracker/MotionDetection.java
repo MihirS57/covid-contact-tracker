@@ -35,9 +35,9 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
 
     int sensorDataCount = 0,timerSec = 0;
     int smoothCnt=6;
-    int steps = 0;
+    int steps = 0,slow=0;
 
-    float initTS = 0.0F,finalTS = 0.0F;
+    float initTS = 0.0F,delay = 0.0F, timeStamp = 0.0F;
 
     /*
     Calculated by first estimating the rate of output of the accelerometer and comparing it with the
@@ -53,15 +53,15 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         currData = findViewById( R.id.current_sensorData );
         dirData = findViewById( R.id.direction_data );
         sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE);
-        step_sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE);
-        step_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_STEP_DETECTOR );
-        if(step_sensor == null){
-            Toast.makeText( MotionDetection.this, "Step Sensor down", Toast.LENGTH_SHORT ).show();
-        }else{
-            Toast.makeText( MotionDetection.this, "Step Sensor Alive", Toast.LENGTH_SHORT ).show();
+        if(sensorManager.getDefaultSensor( Sensor.TYPE_STEP_DETECTOR ) != null){
+            step_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_STEP_DETECTOR );
             sensorManager.registerListener(this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            steps = 0;
+            initTS = 0.0F;
+        }else{
+            Toast.makeText( MotionDetection.this, "Step Sensor Unavailable", Toast.LENGTH_SHORT ).show();
         }
-        /*if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
+        if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
             sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
             sensorDataCount = 0;
@@ -70,7 +70,7 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
             registered = true;
             gravity = new float[3];
             linear_acceleration = new float[3];
-            hist_accl = new float[smoothCnt];
+            //hist_accl = new float[smoothCnt];
             //runTimer();
             Log.d("Motion","Launched");
 
@@ -79,18 +79,43 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
             Toast.makeText( MotionDetection.this, "Accelerometer unavailable", Toast.LENGTH_SHORT ).show();
         }
 
-         */
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+        Log.d("Motion","Accuracy Changed");
 
     }
 
+    protected void onResume() {
+        super.onResume();
+        registered = true;
+        sensorManager.registerListener(this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorDataCount = 0;
+        //hist_accl = new float[smoothCnt];
+        //timerSec = 0;
+        //running = false;
+        //runTimer();
+        //sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
 
+    protected void onPause() {
+        super.onPause();
+        registered = false;
+        sensorManager.unregisterListener(this);
+        Log.d("Motion","Sensor Unregistered");
+        //running = false;
+    }
 
     public void sensorStop(View v){
         if(registered) {
             registered = false;
             sensorManager.unregisterListener( this );
             Log.d( "Motion", "Sensor Unregistered" );
-            sensorData.setText( "----------"+ ((String) sensorData.getText()));
+            dirData.setText( "Steps: "+ steps+ " Slow: "+slow);
+            initTS = 0.0F;
+            steps = 0;
+            slow = 0;
         }
     }
     public void sensorStart(View v){
@@ -99,6 +124,7 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
             sensorManager.registerListener( this, sensor, SensorManager.SENSOR_DELAY_NORMAL );
             sensorManager.registerListener( this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL );
             Log.d( "Motion", "Sensor Registered" );
+            sensorData.setText( "" );
         }
     }
 
@@ -107,26 +133,32 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
     }
 
     public void onSensorChanged(SensorEvent event){
+        timeStamp = event.timestamp/1000000L;
         if(event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
-            if(initTS == 0.0F){
-                initTS = event.timestamp/1000000L;
+            if(initTS == 0.0F || (timeStamp - initTS) > 3000){
+                initTS = timeStamp;
             }else {
-                float delay = (event.timestamp / 1000000L) - initTS;
-                sensorData.setText( (event.timestamp / 1000000L) + " - " + initTS + " = " + delay + "\n" + sensorData.getText() );
-
-                initTS = event.timestamp / 1000000L;
+                delay = (timeStamp) - initTS;
+                sensorData.setText( timeStamp + " - " + initTS + " = " + delay + "\n" + sensorData.getText() );
+                currData.setText( "Moving" );
+                Log.d( "Movement","Started" );
+                if(delay >= 400 && delay <= 1000){
+                    slow++;
+                }
+                initTS = timeStamp;
+                steps++;
             }
-        }
-        /*else {
-            if (event.accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
-                linear_acceleration = preprocessSensorData( event.values );
-                currData.setText( linear_acceleration[0] + "\n" + linear_acceleration[1] + "\n" + linear_acceleration[2] );
-                sensorData.setText( linear_acceleration[2] + "\n" + sensorData.getText() );
 
+        }
+        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+            if (event.accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM &&
+                    initTS != 0.0F &&
+                    (timeStamp - initTS) > 3000) {
+                currData.setText( "Stopped" );
+                Log.d( "Movement","Stopped" );
             }
-        }
 
-         */
+        }
     }
 
     /*public void runTimer(){
@@ -162,16 +194,9 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
         gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];*/
 
-        gravity[0] = 9.8F;
-        gravity[1] = 9.8F;
-        gravity[2] = 9.8F;
-
-        //dirData.setText( values[0]+", "+gravity[0]+"\n"+values[1]+", "+gravity[1]+"\n"+values[2]+", "+gravity[2] );
         linear_acceleration[0] = (float)(Math.round((values[0] )*10.0)/10.0);
         linear_acceleration[1] = (float)(Math.round((values[1] )*10.0)/10.0);
         linear_acceleration[2] = (float)(Math.round((values[2] )*10.0)/10.0);
-
-
         return linear_acceleration;
     }
 
@@ -197,7 +222,7 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         return Math.round((sum/smoothCnt)*10.0)/10.0;
     }
 
-    public boolean stoppedOrNot(float[] accl){
+    /*public boolean stoppedOrNot(float[] accl){
         int count = 0;
         for(int i =0;i<smoothCnt;i++){
             if(accl[i] == 0.0){
@@ -209,7 +234,7 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         }else{
             return false;
         }
-    }
+    }*/
 
 
 
@@ -242,29 +267,5 @@ public class MotionDetection extends AppCompatActivity implements SensorEventLis
         }
     }*/
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-        Log.d("Motion","Accuracy Changed");
 
-    }
-
-    protected void onResume() {
-        super.onResume();
-        sensorDataCount = 0;
-        hist_accl = new float[smoothCnt];
-        //timerSec = 0;
-        registered = true;
-        //running = false;
-        //runTimer();
-        //sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, step_sensor, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    protected void onPause() {
-        super.onPause();
-        registered = false;
-        //running = false;
-        sensorManager.unregisterListener(this);
-        Log.d("Motion","Sensor Unregistered");
-    }
 }
