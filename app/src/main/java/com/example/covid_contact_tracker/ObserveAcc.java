@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,7 +29,9 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     private Sensor sensor;
     List<String[]> data;
     TextView sensorData,currData,dirData;
-    boolean registered = false;
+    boolean registered = false,switchOn = false;
+    Switch gravity_switch;
+    float[] gravity = new float[3];
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
@@ -36,6 +40,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         sensorData = findViewById( R.id.display_accdata );
         currData = findViewById( R.id.current_accData );
         dirData = findViewById( R.id.acc_direction_data );
+        gravity_switch = findViewById( R.id.gravity_switch );
         sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE );
         if(sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER )!= null){
             sensor = sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );
@@ -44,21 +49,40 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         }else{
             Toast.makeText( ObserveAcc.this, "Accelerometer unavailable", Toast.LENGTH_SHORT ).show();
         }
+
+        gravity_switch.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    Toast.makeText( ObserveAcc.this, "Gravity On", Toast.LENGTH_SHORT ).show();
+                    switchOn = true;
+                }else{
+                    switchOn = false;
+                    Toast.makeText( ObserveAcc.this, "Gravity off", Toast.LENGTH_SHORT ).show();
+                }
+            }
+        } );
     }
 
     public float[] preprocessSensorData(float[] values){
 
-        //final float alpha = (float) 0.8;
+        final float alpha = (float) 0.8;
         float[] linear_acceleration = new float[3];
+
         Log.d("Motion","Data Changed");
+        if(switchOn) {
+            linear_acceleration[0] = (float) (Math.round( (values[0]) * 10.0 ) / 10.0);
+            linear_acceleration[1] = (float) (Math.round( (values[1]) * 10.0 ) / 10.0);
+            linear_acceleration[2] = (float) (Math.round( (values[2]) * 10.0 ) / 10.0);
+        }else{
+            gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
+            gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
+            gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];
 
-        /*gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];*/
-
-        linear_acceleration[0] = (float)(Math.round((values[0] )*10.0)/10.0);
-        linear_acceleration[1] = (float)(Math.round((values[1] )*10.0)/10.0);
-        linear_acceleration[2] = (float)(Math.round((values[2] )*10.0)/10.0);
+            linear_acceleration[0] = (float) (Math.round( (values[0] - gravity[0]) * 10.0 ) / 10.0);
+            linear_acceleration[1] = (float) (Math.round( (values[1] - gravity[1]) * 10.0 ) / 10.0);
+            linear_acceleration[2] = (float) (Math.round( (values[2] - gravity[2]) * 10.0 ) / 10.0);
+        }
         return linear_acceleration;
     }
 
@@ -121,7 +145,12 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     public void createAccCSV(View view){
         if(!registered) {
             CSVWriter writer = null;
-            String address = Environment.getExternalStorageDirectory().getAbsolutePath()+"/AccDataFile.csv";
+            String address = "";
+            if(switchOn){
+                address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AccWGDataFile.csv";
+            }else {
+                address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AccDataFile.csv";
+            }
             try{
                 writer = new CSVWriter( new FileWriter( address ) );
                 writer.writeAll(data);

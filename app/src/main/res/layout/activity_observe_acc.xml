@@ -58,10 +58,10 @@
         android:id="@+id/current_accData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/acc_start"
+        android:layout_alignTop="@+id/acc_create_csv"
         android:layout_alignParentStart="true"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="0dp"
         android:text="Acc Current Data"
         android:textAlignment="center" />
 
@@ -69,9 +69,9 @@
         android:id="@+id/acc_direction_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/acc_stop"
+        android:layout_alignTop="@+id/acc_create_csv"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
         android:text="Acc Direction" />
 
@@ -95,13 +95,25 @@
         android:id="@+id/acc_create_csv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/clearData"
+        android:layout_below="@+id/gravity_switch"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="138dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="138dp"
         android:onClick="createAccCSV"
         android:text="Create CSV File" />
+
+    <Switch
+        android:id="@+id/gravity_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/clearData"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="150dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="150dp"
+        android:text="Gravity" />
 
 </RelativeLayout>
