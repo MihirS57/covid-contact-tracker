@@ -47,5 +47,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity( launchMtn );
     }
 
+    public void launchObAcc(View v){
+        Intent ObAcc = new Intent(MainActivity.this, ObserveAcc.class);
+        startActivity( ObAcc );
+    }
 
 }

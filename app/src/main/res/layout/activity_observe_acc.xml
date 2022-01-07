@@ -4,12 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MotionDetection">
+    tools:context=".ObserveAcc">
 
     <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/create_csv"
+        android:layout_below="@+id/acc_create_csv"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="20dp"
@@ -17,7 +17,7 @@
         android:layout_marginEnd="20dp">
 
         <TextView
-            android:id="@+id/display_sensordata"
+            android:id="@+id/display_accdata"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
@@ -31,75 +31,68 @@
 
 
     <Button
-        android:id="@+id/sensor_stop"
+        android:id="@+id/acc_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sensors_available"
+
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="40dp"
-        android:onClick="sensorStop"
+        android:onClick="accStop"
         android:text="Stop" />
 
     <Button
-        android:id="@+id/sensor_start"
+        android:id="@+id/acc_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sensors_available"
+
         android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:layout_marginStart="40dp"
         android:layout_marginTop="15dp"
-        android:onClick="sensorStart"
+        android:onClick="accStart"
         android:text="Start" />
 
     <TextView
-        android:id="@+id/current_sensorData"
+        android:id="@+id/current_accData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sensor_start"
+        android:layout_below="@+id/acc_start"
         android:layout_alignParentStart="true"
         android:layout_marginStart="20dp"
         android:layout_marginTop="15dp"
-        android:text="Current Data"
+        android:text="Acc Current Data"
         android:textAlignment="center" />
 
     <TextView
-        android:id="@+id/direction_data"
+        android:id="@+id/acc_direction_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sensor_stop"
+        android:layout_below="@+id/acc_stop"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="20dp"
-        android:text="Direction" />
+        android:text="Acc Direction" />
 
     <Button
         android:id="@+id/clearData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sensors_available"
+
+        android:layout_alignParentTop="true"
         android:layout_marginStart="23dp"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="23dp"
-        android:layout_toStartOf="@+id/sensor_stop"
-        android:layout_toEndOf="@+id/sensor_start"
-        android:onClick="clearText"
+
+        android:layout_toStartOf="@+id/acc_stop"
+        android:layout_toEndOf="@+id/acc_start"
+        android:onClick="clearTV"
         android:text="Clear" />
 
-    <TextView
-        android:id="@+id/sensors_available"
-        android:layout_width="wrap_content"
-        android:layout_height="15dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="50dp"
-        android:text="Sensors Available" />
 
     <Button
-        android:id="@+id/create_csv"
+        android:id="@+id/acc_create_csv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/clearData"
@@ -108,7 +101,7 @@
         android:layout_marginStart="138dp"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="138dp"
-        android:onClick="createCSV"
+        android:onClick="createAccCSV"
         android:text="Create CSV File" />
 
 </RelativeLayout>
