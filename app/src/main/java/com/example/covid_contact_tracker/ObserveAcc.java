@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -29,13 +30,16 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     private Sensor sensor;
     List<String[]> data;
     TextView sensorData,currData,dirData;
-    boolean registered = false,switchOn = false;
+    boolean registered = false,switchOn = false,keepScreenOn = true;
     Switch gravity_switch;
     float[] gravity = new float[3];
+    long TS_i,toSec = 1000000000L;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_observe_acc );
+        getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+
         data = new ArrayList<String[]>();
         sensorData = findViewById( R.id.display_accdata );
         currData = findViewById( R.id.current_accData );
@@ -95,17 +99,24 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     public void onSensorChanged(SensorEvent event) {
+        if(getListLength() == 0){
+            TS_i = event.timestamp;
+        }
         if(event.accuracy>=SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
             float[] linear_acceleration = preprocessSensorData( event.values );
             float accVal = calculateAcc( linear_acceleration );
+            String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
             String[] vals = {String.valueOf( linear_acceleration[0] ),
                     String.valueOf( linear_acceleration[1] ),
                     String.valueOf( linear_acceleration[2] ),
                     String.valueOf( accVal ),
-                    String.valueOf( (event.timestamp/1000000L) )};
+                    (ts_c)};
             addToList( vals );
-            sensorData.setText( linear_acceleration[0]+", "+linear_acceleration[1]+", "
-            +linear_acceleration[2]+", "+(accVal) +", "+ (event.timestamp/1000000L)+"\n"+sensorData.getText());
+            /*sensorData.setText( linear_acceleration[0]+", "+linear_acceleration[1]+", "
+            +linear_acceleration[2]+", "+(accVal) +", "+ (event.timestamp)+", "+ (TS_i)+", "+ (float)((event.timestamp - TS_i)/toSec)+"\n"+sensorData.getText());
+
+             */
+            sensorData.setText( ((event.timestamp)+", "+ (TS_i)+", "+ (event.timestamp - TS_i) + ", "+ (ts_c)));
 
         }else{
             sensorData.setText( "Low Accuracy"+sensorData.getText() );
@@ -131,6 +142,10 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     public void clearTV(View view){
         sensorData.setText( "" );
         clearList();
+    }
+
+    public int getListLength(){
+        return data.size();
     }
 
     public void addToList(String[] vals){
@@ -169,6 +184,10 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         super.onResume();
         registered = true;
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if(!keepScreenOn) {
+            getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+        }
+        keepScreenOn = true;
     }
 
     protected void onPause() {
@@ -176,6 +195,10 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         clearList();
         registered = false;
         sensorManager.unregisterListener(this);
+        if(keepScreenOn){
+            getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+        }
+        keepScreenOn = false;
         Log.d("Motion","Sensor Unregistered");
 
     }
