@@ -21,7 +21,10 @@ import com.opencsv.CSVWriter;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class ObserveAcc extends AppCompatActivity implements SensorEventListener{
@@ -159,12 +162,17 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 
     public void createAccCSV(View view){
         if(!registered) {
+            Date currentTime = Calendar.getInstance().getTime();
+            Calendar c = Calendar.getInstance();
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
+            String formattedDate = df.format(c.getTime());
             CSVWriter writer = null;
             String address = "";
             if(switchOn){
                 address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AccWGDataFile.csv";
             }else {
-                address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AccDataFile.csv";
+                String name = "AccDataFile"+formattedDate+".csv";
+                address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/"+name;
             }
             try{
                 writer = new CSVWriter( new FileWriter( address ) );
