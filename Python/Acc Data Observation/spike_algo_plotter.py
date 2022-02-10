@@ -5,10 +5,17 @@ import pandas as pd
 
 plot_type = input('What type of plot? Single (S) or Multiple (M) or count spikes (CS): ')
 
+# matrix = pd.read_csv('AccDataFile2022-02-01181429(Down).csv')
+# matrix = pd.read_csv('AccDataFile2022-02-01184116(Up).csv')
+# matrix = pd.read_csv('AccDataFile2022-02-01181805(Normal).csv')
+matrix = pd.read_csv('AccDataFile2022-02-01183529(Normal).csv')
+# matrix = pd.read_csv('AccDataFile2022-02-09184438(Normal).csv')
+
 # matrix = pd.read_csv('General/AccDataFile1.csv')
-matrix = pd.read_csv('Casual/AccDataFileMe4.csv')
+# matrix = pd.read_csv('Casual/AccDataFileMe4.csv')
 # matrix = pd.read_csv('Casual/AccDataFileDad.csv')
 # matrix = pd.read_csv('3_steps/AccDataFile.csv')
+
 X = matrix.iloc[:,[0]].values
 Y = matrix.iloc[:,[1]].values
 Z = matrix.iloc[:,[2]].values
@@ -36,7 +43,7 @@ def convert_ts(list_TS):
 def count_spikes(list,TS):
     
     std_spike_val = 8
-    diff_ts_spike = 1
+    diff_ts_spike = 1.0
     prev_spike_ts = 0.0
     counter = 0
     for idx,val in enumerate(list):
