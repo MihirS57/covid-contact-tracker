@@ -9,10 +9,10 @@ const PORT = process.env.PORT;
 connectDb();
 
 app.use(express.json());
-//const keyword = require('./routes/keyword');
+const contacts = require('./routes/contacts');
 
 app.use(errorHandle);
-//app.use('/api/v1/keyword',keyword);
+app.use('/api/v1/covid',contacts);
 const server = app.listen(PORT, () => {
     console.log('App listening on port ',PORT);
 });
