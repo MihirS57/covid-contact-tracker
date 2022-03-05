@@ -2,14 +2,25 @@ const mongoose = require('mongoose')
 const contactSchema = mongoose.Schema({
     user_mac: {
         type: String,
-        required: ['true','MAC Address is mandatory'],
+        required: [true,'MAC Address is mandatory'],
         unique: true
     },
     contacts: [
         {
-            contact_mac: String,
-            date: Date,
-            rmmi: Number
+            date: {
+                type: String,
+                required: [true,'Date is mandatory'],
+                unique: true
+            },
+            contacts: [
+                {
+                    contact_mac: {
+                        type: String,
+                        unique: true
+                    },
+                    rmmi: Number
+                }
+            ]            
         }
     ]
 })

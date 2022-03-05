@@ -1,16 +1,46 @@
-const contact = require('../models/contact')
+const contact = require('../models/contact');
+const Contact = require('../models/contact')
 
 //insert or update existing key count
 exports.insertMAC = async (req,res,next) => {
     try{
-        const {user_mac,user_contacts} = req.body
-
-        
+        const {user_mac,date,new_contacts} = req.body
+        const user = await Contact.findOne({user_mac});
+        if(!user){
+            const contNew = await Contact.create({user_mac: user_mac,contacts: [{date: date,contacts:new_contacts}]});
+            return res.status(200).json({
+                success: true,
+                message:"User created, contacts updated",
+                user: contNew,
+                });
+        }
+        console.log(new_contacts)
+        let list = user.contacts
+        let temp = []
+        for(let i = 0;i<list.length;i++){
+            if(list[i].date == date){
+                console.log("Date Found",new_contacts,list[i].contacts)
+                list[i].contacts = list[i].contacts.concat(new_contacts)
+                const updatedUser = await Contact.findByIdAndUpdate(user._id,{contacts:list},{
+                    new: true,
+                    newValidators: true
+                });
+                return res.status(200).json({
+                    success: true,
+                    message:"Date Found, MACs added!",
+                    user: updatedUser
+                    });
+            }
+        }
+        list.push({date: date,contacts:new_contacts})
+        const updatedUser = await Contact.findByIdAndUpdate(user._id,{contacts:list},{
+            new: true,
+            newValidators: true
+        });
         return res.status(200).json({
             success: true,
-            message:"Successfully key inserted/updated",
-            user: user_mac,
-            contacts: user_contacts
+            message:"New Date added",
+            user: updatedUser
             });
     }catch(err){
         console.log(err.stack);
@@ -27,7 +57,7 @@ function checkAndSort(qList, keyIndex){
     var countCurr = qList[keyIndex].count;
     if(keyIndex-1 >= 0){
         var k = keyIndex-1;
-        while(k>=0 && countCurr > qList[k].count){
+        while(k>=0 && countCurr < qList[k].count){
             k=k-1;
         }
         if(k<0){
