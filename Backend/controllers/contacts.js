@@ -1,4 +1,3 @@
-const contact = require('../models/contact');
 const Contact = require('../models/contact')
 
 //insert or update existing key count
@@ -16,11 +15,20 @@ exports.insertMAC = async (req,res,next) => {
         }
         console.log(new_contacts)
         let list = user.contacts
-        let temp = []
-        for(let i = 0;i<list.length;i++){
-            if(list[i].date == date){
-                console.log("Date Found",new_contacts,list[i].contacts)
-                list[i].contacts = list[i].contacts.concat(new_contacts)
+        let ind = 0
+        for(let item of list){
+            if(item.date == date){
+                new_contacts.forEach(element => {
+                    ind = item.contacts.findIndex(x => x.contact_mac == element.contact_mac)
+                    console.log("Contact Found: ",item.contacts[ind])
+                    if(ind != -1){
+                        if(element.rmmi > item.contacts[ind].rmmi){
+                            item.contacts[ind].rmmi = element.rmmi
+                        }
+                    }else{
+                        item.contacts.push(element)
+                    }
+                });
                 const updatedUser = await Contact.findByIdAndUpdate(user._id,{contacts:list},{
                     new: true,
                     newValidators: true
