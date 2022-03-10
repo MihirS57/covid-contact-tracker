@@ -10,13 +10,11 @@ const contactSchema = mongoose.Schema({
             date: {
                 type: String,
                 required: [true,'Date is mandatory'],
-                unique: true
             },
             contacts: [
                 {
                     contact_mac: {
                         type: String,
-                        unique: true
                     },
                     rmmi: Number
                 }
