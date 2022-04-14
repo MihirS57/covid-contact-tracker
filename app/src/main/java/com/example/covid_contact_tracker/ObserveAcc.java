@@ -30,11 +30,11 @@ import java.util.List;
 public class ObserveAcc extends AppCompatActivity implements SensorEventListener{
 
     private SensorManager sensorManager;
-    private Sensor sensor;
+    private Sensor sensor,gyro_sensor;
     List<String[]> data;
     TextView sensorData,currData,dirData;
-    boolean registered = false,switchOn = false,keepScreenOn = true;
-    Switch gravity_switch;
+    boolean registered = false,switchOn = false,keepScreenOn = true, rightOn = false, walkOn = false,captureOn = false;
+    Switch gravity_switch,right_switch,walk_switch;
     float[] gravity = new float[3];
     long TS_i,toSec = 1000000000L;
     @Override
@@ -48,9 +48,12 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         currData = findViewById( R.id.current_accData );
         dirData = findViewById( R.id.acc_direction_data );
         gravity_switch = findViewById( R.id.gravity_switch );
+        right_switch = findViewById( R.id.position );
+        walk_switch = findViewById( R.id.walkOrRun );
         sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE );
         if(sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER )!= null){
             sensor = sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );
+            gyro_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_GYROSCOPE );
             sensorManager.registerListener( this,sensor,SensorManager.SENSOR_DELAY_NORMAL );
             registered = true;
         }else{
@@ -69,6 +72,35 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
                 }
             }
         } );
+
+        right_switch.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener(){
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b){
+                    createAccCSV( null );
+                    if(b){
+                        Toast.makeText( ObserveAcc.this, "Right On", Toast.LENGTH_SHORT ).show();
+                        rightOn = true;
+                    }else{
+                        Toast.makeText( ObserveAcc.this, "Left On", Toast.LENGTH_SHORT ).show();
+                        rightOn = false;
+                    }
+                }
+
+        });
+
+        walk_switch.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener(){
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b){
+                    createAccCSV( null );
+                    if(b){
+                        Toast.makeText( ObserveAcc.this, "Walk On", Toast.LENGTH_SHORT ).show();
+                        walkOn = true;
+                    }else{
+                        Toast.makeText( ObserveAcc.this, "Run On", Toast.LENGTH_SHORT ).show();
+                        walkOn = false;
+                    }
+                }
+        });
     }
 
     public float[] preprocessSensorData(float[] values){
@@ -109,12 +141,14 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             float[] linear_acceleration = preprocessSensorData( event.values );
             float accVal = calculateAcc( linear_acceleration );
             String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
-            String[] vals = {String.valueOf( linear_acceleration[0] ),
-                    String.valueOf( linear_acceleration[1] ),
-                    String.valueOf( linear_acceleration[2] ),
-                    String.valueOf( accVal ),
-                    (ts_c)};
-            addToList( vals );
+            if(captureOn) {
+                String[] vals = {String.valueOf( rightOn ? 1 : 0 ), String.valueOf( walkOn ? 1 : 0 ), String.valueOf( linear_acceleration[0] ),
+                        String.valueOf( linear_acceleration[1] ),
+                        String.valueOf( linear_acceleration[2] ),
+                        String.valueOf( accVal ),
+                        (ts_c)};
+                addToList( vals );
+            }
             /*sensorData.setText( linear_acceleration[0]+", "+linear_acceleration[1]+", "
             +linear_acceleration[2]+", "+(accVal) +", "+ (event.timestamp)+", "+ (TS_i)+", "+ (float)((event.timestamp - TS_i)/toSec)+"\n"+sensorData.getText());
 
@@ -133,11 +167,13 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 
 
     public void accStart(View view){
+        captureOn = true;
         registered = true;
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     public void accStop(View view){
+        captureOn = false;
         registered = false;
         sensorManager.unregisterListener(this);
     }
@@ -156,6 +192,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     public void clearList(){
+        captureOn = false;
         data.clear();
         data.add( new String[]{"X","Y","Z","Acc","Time"} );
     }
@@ -168,10 +205,12 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             String formattedDate = df.format(c.getTime());
             CSVWriter writer = null;
             String address = "";
+            String Wmode = walkOn?"W":"R";
+            String mode = (rightOn?"R":"L")+Wmode;
             if(switchOn){
-                address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AccWGDataFile.csv";
+                address = Environment.getExternalStorageDirectory().getAbsolutePath() + mode +"/AccWG.csv";
             }else {
-                String name = "AccDataFile"+formattedDate+".csv";
+                String name = mode+"Acc"+formattedDate+".csv";
                 address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/"+name;
             }
             try{

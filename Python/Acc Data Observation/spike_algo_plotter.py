@@ -8,7 +8,7 @@ plot_type = input('What type of plot? Single (S) or Multiple (M) or count spikes
 # matrix = pd.read_csv('AccDataFile2022-02-01181429(Down).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-01184116(Up).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-01181805(Normal).csv')
-matrix = pd.read_csv('AccDataFile2022-02-01183529(Normal).csv')
+matrix = pd.read_csv('./Datasets/AccDataFile2022-02-01183529(Normal).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-09184438(Normal).csv')
 
 # matrix = pd.read_csv('General/AccDataFile1.csv')
