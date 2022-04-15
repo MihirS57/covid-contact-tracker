@@ -8,21 +8,22 @@ plot_type = input('What type of plot? Single (S) or Multiple (M) or count spikes
 # matrix = pd.read_csv('AccDataFile2022-02-01181429(Down).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-01184116(Up).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-01181805(Normal).csv')
-matrix = pd.read_csv('./Datasets/AccDataFile2022-02-01183529(Normal).csv')
+# matrix = pd.read_csv('./Datasets/AccDataFile2022-02-01183529(Normal).csv')
 # matrix = pd.read_csv('AccDataFile2022-02-09184438(Normal).csv')
-
+matrix = pd.read_csv('./Datasets/RWAcc2022-04-14195525.csv')
 # matrix = pd.read_csv('General/AccDataFile1.csv')
 # matrix = pd.read_csv('Casual/AccDataFileMe4.csv')
 # matrix = pd.read_csv('Casual/AccDataFileDad.csv')
 # matrix = pd.read_csv('3_steps/AccDataFile.csv')
-
-X = matrix.iloc[:,[0]].values
-Y = matrix.iloc[:,[1]].values
-Z = matrix.iloc[:,[2]].values
-Acc = matrix.iloc[:,[3]].values
+LR = matrix.iloc[:,[0]].values
+RW = matrix.iloc[:,[1]].values
+X = matrix.iloc[:,[2]].values
+Y = matrix.iloc[:,[3]].values
+Z = matrix.iloc[:,[4]].values
+Acc = matrix.iloc[:,[5]].values
 #TS_i = matrix.iloc[:,[4]].values[0]
 #TS = (matrix.iloc[:,[4]].values - TS_i)/100000000
-TS = matrix.iloc[:,[4]].values
+TS = matrix.iloc[:,[6]].values
 
 def get_avg(accData):
     sum = 0
