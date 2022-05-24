@@ -3,6 +3,7 @@ package com.example.covid_contact_tracker;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,8 +20,13 @@ import android.widget.Toast;
 
 import com.opencsv.CSVWriter;
 
+import org.tensorflow.lite.Interpreter;
+
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,7 +38,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     private SensorManager sensorManager;
     private Sensor sensor,gyro_sensor;
     List<String[]> data;
-    TextView sensorData,currData,dirData;
+    TextView sensorData,currData,dirData, motion_pred;
+    Interpreter model_intrepret;
     boolean registered = false,switchOn = false,keepScreenOn = true, rightOn = false, walkOn = false,captureOn = false;
     Switch gravity_switch,right_switch,walk_switch;
     float[] gravity = new float[3];
@@ -47,6 +54,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         sensorData = findViewById( R.id.display_accdata );
         currData = findViewById( R.id.current_accData );
         dirData = findViewById( R.id.acc_direction_data );
+        motion_pred = findViewById( R.id.motion_prediction );
         gravity_switch = findViewById( R.id.gravity_switch );
         right_switch = findViewById( R.id.position );
         walk_switch = findViewById( R.id.walkOrRun );
@@ -56,6 +64,11 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             gyro_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_GYROSCOPE );
             sensorManager.registerListener( this,sensor,SensorManager.SENSOR_DELAY_NORMAL );
             registered = true;
+            try{
+                model_intrepret = new Interpreter( loadPredictionModel() );
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }else{
             Toast.makeText( ObserveAcc.this, "Accelerometer unavailable", Toast.LENGTH_SHORT ).show();
         }
@@ -133,6 +146,22 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         return accl;
     }
 
+    public String getPredictionFrom(float x, float y, float z, float acc){
+        float[][] inputVals = new float[1][4];
+        inputVals[0][0] = x;
+        inputVals[0][1] = y;
+        inputVals[0][2] = z;
+        inputVals[0][3] = acc;
+
+        float[][] outputVals = new float[1][2];
+        model_intrepret.run( inputVals,outputVals );
+        if(outputVals[0][1]>outputVals[0][0]){
+            return "Walking";
+        }else{
+            return "Running";
+        }
+    }
+
     public void onSensorChanged(SensorEvent event) {
         if(getListLength() == 0){
             TS_i = event.timestamp;
@@ -141,6 +170,13 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             float[] linear_acceleration = preprocessSensorData( event.values );
             float accVal = calculateAcc( linear_acceleration );
             String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
+
+            String prediction = getPredictionFrom( linear_acceleration[0],
+                    linear_acceleration[1],
+                    linear_acceleration[2],
+                    accVal);
+            motion_pred.setText( prediction );
+
             if(captureOn) {
                 String[] vals = {String.valueOf( rightOn ? 1 : 0 ), String.valueOf( walkOn ? 1 : 0 ), String.valueOf( linear_acceleration[0] ),
                         String.valueOf( linear_acceleration[1] ),
@@ -158,6 +194,15 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         }else{
             sensorData.setText( "Low Accuracy"+sensorData.getText() );
         }
+    }
+
+    private MappedByteBuffer loadPredictionModel() throws IOException{
+        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model.tflite" );
+        FileInputStream fileInputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = fileInputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY,startOffset,declaredLength);
     }
 
     @Override

@@ -158,4 +158,15 @@
         android:text="Right"
         android:textColor="#000000" />
 
+    <TextView
+        android:id="@+id/motion_prediction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="144dp"
+        android:layout_marginTop="360dp"
+        android:text="Prediction"
+        android:textSize="27sp" />
+
 </RelativeLayout>
