@@ -17,3 +17,6 @@ local.properties
 /Backend/node_modules
 /Python/Acc Data Observation/RunOrWalk
 /Python/Acc Data Observation/.ipynb_checkpoints
+/Python/Acc Data Observation/trained_models
+/app/src/main/assets
+/Python/Acc Data Observation/Sample Datasets

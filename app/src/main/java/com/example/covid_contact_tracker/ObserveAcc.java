@@ -10,10 +10,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.SyncStateContract;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,18 +35,22 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-
+import android.os.Vibrator;
 public class ObserveAcc extends AppCompatActivity implements SensorEventListener{
 
     private SensorManager sensorManager;
     private Sensor sensor,gyro_sensor;
     List<String[]> data;
-    TextView sensorData,currData,dirData, motion_pred;
+    TextView sensorData,currData,dirData, motion_pred, pred_hist;
+    EditText age_inp;
     Interpreter model_intrepret;
+    Vibrator v;
     boolean registered = false,switchOn = false,keepScreenOn = true, rightOn = false, walkOn = false,captureOn = false;
     Switch gravity_switch,right_switch,walk_switch;
     float[] gravity = new float[3];
     long TS_i,toSec = 1000000000L;
+    int input_age;
+    float[] lin_acc,gyro_rate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
@@ -55,6 +62,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         currData = findViewById( R.id.current_accData );
         dirData = findViewById( R.id.acc_direction_data );
         motion_pred = findViewById( R.id.motion_prediction );
+        age_inp = findViewById( R.id.edit_age );
+        pred_hist = findViewById( R.id.pred_history );
         gravity_switch = findViewById( R.id.gravity_switch );
         right_switch = findViewById( R.id.position );
         walk_switch = findViewById( R.id.walkOrRun );
@@ -62,7 +71,13 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         if(sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER )!= null){
             sensor = sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );
             gyro_sensor = sensorManager.getDefaultSensor( Sensor.TYPE_GYROSCOPE );
-            sensorManager.registerListener( this,sensor,SensorManager.SENSOR_DELAY_NORMAL );
+            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            lin_acc = new float[3];
+            gyro_rate = new float[3];
+            input_age = 21;
+            //sensorManager.registerListener( this,sensor,SensorManager.SENSOR_DELAY_NORMAL );
+            sensorManager.registerListener( this,sensor,500000 );
+            sensorManager.registerListener( this,gyro_sensor,500000);
             registered = true;
             try{
                 model_intrepret = new Interpreter( loadPredictionModel() );
@@ -138,6 +153,14 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         return linear_acceleration;
     }
 
+    public float[] preprocessSensorValues(float[] values){
+        float[] vals = new float[3];
+        vals[0] = (float) (Math.round( (values[0]) * 10.0 ) / 10.0);
+        vals[1] = (float) (Math.round( (values[1]) * 10.0 ) / 10.0);
+        vals[2] = (float) (Math.round( (values[2]) * 10.0 ) / 10.0);
+        return vals;
+    }
+
     public float calculateAcc(float[] acc){
         float accl = (float) ((float) Math.round(Math.sqrt( (acc[0] * acc[0]) +
                 (acc[1] * acc[1]) + (acc[2] * acc[2])
@@ -146,19 +169,32 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         return accl;
     }
 
-    public String getPredictionFrom(float x, float y, float z, float acc){
-        float[][] inputVals = new float[1][4];
-        inputVals[0][0] = x;
-        inputVals[0][1] = y;
-        inputVals[0][2] = z;
-        inputVals[0][3] = acc;
+    public String getPredictionFrom(int age, float x, float y, float z, float xg, float yg, float zg){
+        if(xg == 0.0 && yg == 0.0 && zg == 0.0){
+            v.cancel();
+            return "Resting";
+        }
+        float[][] inputVals = new float[1][7];
+        inputVals[0][0] = age;
+        inputVals[0][1] = x;
+        inputVals[0][2] = y;
+        inputVals[0][3] = z;
+        inputVals[0][4] = xg;
+        inputVals[0][5] = yg;
+        inputVals[0][6] = zg;
+
 
         float[][] outputVals = new float[1][2];
         model_intrepret.run( inputVals,outputVals );
         if(outputVals[0][1]>outputVals[0][0]){
-            return "Walking";
+            //pred_hist.setText(pred_hist.getText()+"\nWalking");
+            v.cancel();
+            return "Walking"+outputVals[0][1];
         }else{
-            return "Running";
+
+            v.vibrate(new long[] {0, 4000,100}, 0);
+            //pred_hist.setText(pred_hist.getText()+"\nRunning");
+            return "Running"+outputVals[0][0];
         }
     }
 
@@ -167,29 +203,48 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             TS_i = event.timestamp;
         }
         if(event.accuracy>=SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
+            if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+                lin_acc = preprocessSensorData( event.values );
+            }else{
+                gyro_rate = preprocessSensorValues(event.values);
+            }
             float[] linear_acceleration = preprocessSensorData( event.values );
             float accVal = calculateAcc( linear_acceleration );
             String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
 
-            String prediction = getPredictionFrom( linear_acceleration[0],
-                    linear_acceleration[1],
-                    linear_acceleration[2],
-                    accVal);
-            motion_pred.setText( prediction );
+            if(rightOn == true && lin_acc[0] != -1000 && gyro_rate[0] != -1000){
+                String prediction = getPredictionFrom( input_age, lin_acc[0],lin_acc[1], lin_acc[2], gyro_rate[0],
+                gyro_rate[1], gyro_rate[2]);
+                motion_pred.setText( prediction );
+            }else{
+                v.cancel();
+                motion_pred.setText( "prediction Off" );
+            }
 
-            if(captureOn) {
-                String[] vals = {String.valueOf( rightOn ? 1 : 0 ), String.valueOf( walkOn ? 1 : 0 ), String.valueOf( linear_acceleration[0] ),
-                        String.valueOf( linear_acceleration[1] ),
-                        String.valueOf( linear_acceleration[2] ),
+            //motion_pred.setText( "Turned Off" );
+
+            if(captureOn && lin_acc[0] != -1000 && gyro_rate[0] != -1000) {
+                String[] vals = {(ts_c),
+                        String.valueOf( input_age ),
+                        String.valueOf( walkOn ? 1 : 0 ),
+                        String.valueOf( lin_acc[0] ),
+                        String.valueOf( lin_acc[1] ),
+                        String.valueOf( lin_acc[2] ),
+                        String.valueOf( gyro_rate[0] ),
+                        String.valueOf( gyro_rate[1] ),
+                        String.valueOf( gyro_rate[2] ),
                         String.valueOf( accVal ),
-                        (ts_c)};
+                        };
                 addToList( vals );
+                lin_acc[0] = -1000;
+                gyro_rate[0] = -1000;
             }
             /*sensorData.setText( linear_acceleration[0]+", "+linear_acceleration[1]+", "
             +linear_acceleration[2]+", "+(accVal) +", "+ (event.timestamp)+", "+ (TS_i)+", "+ (float)((event.timestamp - TS_i)/toSec)+"\n"+sensorData.getText());
 
              */
-            sensorData.setText( ((event.timestamp)+", "+ (TS_i)+", "+ (event.timestamp - TS_i) + ", "+ (ts_c)));
+            sensorData.setText( lin_acc[0]+", "+lin_acc[1]+", "+ lin_acc[2]+", "+ gyro_rate[0]+", "+
+                    gyro_rate[1]+", "+ gyro_rate[2]+", "+ (ts_c));
 
         }else{
             sensorData.setText( "Low Accuracy"+sensorData.getText() );
@@ -197,7 +252,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     private MappedByteBuffer loadPredictionModel() throws IOException{
-        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model.tflite" );
+        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v2.9.tflite" );
+        //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.1.tflite" );
         FileInputStream fileInputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = fileInputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
@@ -212,15 +268,20 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 
 
     public void accStart(View view){
+        //v.vibrate( 2000 );
         captureOn = true;
         registered = true;
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyro_sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        input_age = Integer.valueOf( age_inp.getText().toString());
     }
 
     public void accStop(View view){
         captureOn = false;
         registered = false;
         sensorManager.unregisterListener(this);
+        v.vibrate( 5000 );
+
     }
 
     public void clearTV(View view){
@@ -233,29 +294,32 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     public void addToList(String[] vals){
+        if(data.size() == 0){
+            data.add( new String[]{"TS","Age","Mode","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
+        }
         data.add( vals );
     }
 
     public void clearList(){
         captureOn = false;
         data.clear();
-        data.add( new String[]{"X","Y","Z","Acc","Time"} );
+        data.add( new String[]{"TS","Age","Mode","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
     }
 
     public void createAccCSV(View view){
         if(!registered) {
             Date currentTime = Calendar.getInstance().getTime();
             Calendar c = Calendar.getInstance();
-            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
+            SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
             String formattedDate = df.format(c.getTime());
             CSVWriter writer = null;
             String address = "";
-            String Wmode = walkOn?"W":"R";
-            String mode = (rightOn?"R":"L")+Wmode;
+            String Wmode = walkOn?"walk":"run";
+            //String mode = (rightOn?"R":"L")+Wmode;
             if(switchOn){
-                address = Environment.getExternalStorageDirectory().getAbsolutePath() + mode +"/AccWG.csv";
+                address = Environment.getExternalStorageDirectory().getAbsolutePath() +"LR/AccWG.csv";
             }else {
-                String name = mode+"Acc"+formattedDate+".csv";
+                String name = "Sample_"+Wmode+"_dataset_"+formattedDate+".csv";
                 address = Environment.getExternalStorageDirectory().getAbsolutePath() + "/"+name;
             }
             try{
@@ -272,10 +336,26 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ){
+            accStart( null );
+        }
+        if(keyCode == KeyEvent.KEYCODE_VOLUME_UP && registered){
+            accStop( null );
+            createAccCSV( null );
+        }
+        else {
+            super.onKeyDown(keyCode, event);
+        }
+        return true;
+    }
+
     protected void onResume() {
         super.onResume();
         registered = true;
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyro_sensor, SensorManager.SENSOR_DELAY_NORMAL);
         if(!keepScreenOn) {
             getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
         }

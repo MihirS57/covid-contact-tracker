@@ -6,13 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".ObserveAcc">
 
+
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/walkOrRun"
-        android:layout_marginStart="-2dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="1dp"
         android:layout_toEndOf="@+id/walkOrRun"
         android:text="Walk"
         android:textColor="#000000" />
@@ -24,7 +25,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="20dp">
 
         <TextView
@@ -39,7 +40,6 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </ScrollView>
-
 
     <Button
         android:id="@+id/acc_start"
@@ -91,16 +91,16 @@
         android:text="Acc Current Data"
         android:textAlignment="center" />
 
+
     <TextView
         android:id="@+id/acc_direction_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/acc_create_csv"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginTop="-1dp"
+        android:layout_marginEnd="19dp"
         android:text="Acc Direction" />
-
 
     <Button
         android:id="@+id/acc_create_csv"
@@ -142,8 +142,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="135dp"
-        android:layout_marginTop="35dp"
+        android:layout_marginStart="161dp"
+        android:layout_marginTop="36dp"
         android:layout_toEndOf="@+id/position"
         android:text="Run" />
 
@@ -165,8 +165,41 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="144dp"
-        android:layout_marginTop="360dp"
+        android:layout_marginTop="282dp"
         android:text="Prediction"
         android:textSize="27sp" />
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/motion_prediction"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/pred_history"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/motion_prediction"
+            android:layout_alignParentStart="true"
+
+            android:text=""
+            android:textSize="12sp" />
+    </ScrollView>
+
+    <EditText
+        android:id="@+id/edit_age"
+        android:layout_width="44dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="28dp"
+        android:layout_toEndOf="@+id/textView"
+        android:ems="10"
+        android:inputType="number"
+        android:text="21" />
 
 </RelativeLayout>
