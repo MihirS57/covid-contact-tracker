@@ -193,7 +193,6 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         }else{
 
             v.vibrate(new long[] {0, 4000,100}, 0);
-            //pred_hist.setText(pred_hist.getText()+"\nRunning");
             return "Running"+outputVals[0][0];
         }
     }
@@ -208,8 +207,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             }else{
                 gyro_rate = preprocessSensorValues(event.values);
             }
-            float[] linear_acceleration = preprocessSensorData( event.values );
-            float accVal = calculateAcc( linear_acceleration );
+            //float[] linear_acceleration = preprocessSensorData( event.values );
+            float accVal = calculateAcc( lin_acc );
             String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
 
             if(rightOn == true && lin_acc[0] != -1000 && gyro_rate[0] != -1000){
@@ -220,8 +219,6 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
                 v.cancel();
                 motion_pred.setText( "prediction Off" );
             }
-
-            //motion_pred.setText( "Turned Off" );
 
             if(captureOn && lin_acc[0] != -1000 && gyro_rate[0] != -1000) {
                 String[] vals = {(ts_c),
@@ -239,10 +236,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
                 lin_acc[0] = -1000;
                 gyro_rate[0] = -1000;
             }
-            /*sensorData.setText( linear_acceleration[0]+", "+linear_acceleration[1]+", "
-            +linear_acceleration[2]+", "+(accVal) +", "+ (event.timestamp)+", "+ (TS_i)+", "+ (float)((event.timestamp - TS_i)/toSec)+"\n"+sensorData.getText());
 
-             */
             sensorData.setText( lin_acc[0]+", "+lin_acc[1]+", "+ lin_acc[2]+", "+ gyro_rate[0]+", "+
                     gyro_rate[1]+", "+ gyro_rate[2]+", "+ (ts_c));
 
