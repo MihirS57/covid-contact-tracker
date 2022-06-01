@@ -49,8 +49,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     Switch gravity_switch,right_switch,walk_switch;
     float[] gravity = new float[3];
     long TS_i,toSec = 1000000000L;
-    int input_age;
-    float[] lin_acc,gyro_rate;
+    int input_age,count_acc=0,count_gyro=0;
+    float[] lin_acc,event_lin_acc, gyro_rate,event_gyro_rate ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
@@ -74,6 +74,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             lin_acc = new float[3];
             gyro_rate = new float[3];
+            event_lin_acc = new float[12];
+            event_gyro_rate = new float[12];
             input_age = 21;
             //sensorManager.registerListener( this,sensor,SensorManager.SENSOR_DELAY_NORMAL );
             sensorManager.registerListener( this,sensor,500000 );
@@ -169,19 +171,37 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         return accl;
     }
 
-    public String getPredictionFrom(int age, float x, float y, float z, float xg, float yg, float zg){
-        if(xg == 0.0 && yg == 0.0 && zg == 0.0){
-            v.cancel();
-            return "Resting";
-        }
-        float[][] inputVals = new float[1][7];
+    public String getPredictionFrom(int age){
+//        if(xg == 0.0 && yg == 0.0 && zg == 0.0){
+//            v.cancel();
+//            return "Resting";
+//        }
+        int acc_index = 0,gyro_index=0;
+        float[][] inputVals = new float[1][25];
+        boolean acc_filled = false;
         inputVals[0][0] = age;
-        inputVals[0][1] = x;
-        inputVals[0][2] = y;
-        inputVals[0][3] = z;
-        inputVals[0][4] = xg;
-        inputVals[0][5] = yg;
-        inputVals[0][6] = zg;
+        for(int i=1;i<25;i++){
+            if(!acc_filled){
+                inputVals[0][i] = event_lin_acc[acc_index];
+                acc_index++;
+                if(acc_index%3 == 0){
+                    acc_filled = true;
+                }
+            }else{
+                inputVals[0][i] = event_gyro_rate[gyro_index];
+                gyro_index++;
+                if(gyro_index%3 == 0){
+                    acc_filled = false;
+                }
+            }
+        }
+//        inputVals[0][0] = age;
+//        inputVals[0][1] = x;
+//        inputVals[0][2] = y;
+//        inputVals[0][3] = z;
+//        inputVals[0][4] = xg;
+//        inputVals[0][5] = yg;
+//        inputVals[0][6] = zg;
 
 
         float[][] outputVals = new float[1][2];
@@ -197,6 +217,56 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    public void storeInEventBuffer(int mode, int count_event){  // mode 1 for lin acc 2 for gyro
+        if(mode == 1){
+            switch(count_acc){
+                case 0:
+                    event_lin_acc[0] = lin_acc[0];
+                    event_lin_acc[1] = lin_acc[1];
+                    event_lin_acc[2] = lin_acc[2];
+                    break;
+                case 1:
+                    event_lin_acc[3] = lin_acc[0];
+                    event_lin_acc[4] = lin_acc[1];
+                    event_lin_acc[5] = lin_acc[2];
+                    break;
+                case 2:
+                    event_lin_acc[6] = lin_acc[0];
+                    event_lin_acc[7] = lin_acc[1];
+                    event_lin_acc[8] = lin_acc[2];
+                    break;
+                case 3:
+                    event_lin_acc[9] = lin_acc[0];
+                    event_lin_acc[10] = lin_acc[1];
+                    event_lin_acc[11] = lin_acc[2];
+                    break;
+            }
+        }else{
+            switch(count_acc){
+                case 0:
+                    event_gyro_rate[0] = gyro_rate[0];
+                    event_gyro_rate[1] = gyro_rate[1];
+                    event_gyro_rate[2] = gyro_rate[2];
+                    break;
+                case 1:
+                    event_gyro_rate[3] = gyro_rate[0];
+                    event_gyro_rate[4] = gyro_rate[1];
+                    event_gyro_rate[5] = gyro_rate[2];
+                    break;
+                case 2:
+                    event_gyro_rate[6] = gyro_rate[0];
+                    event_gyro_rate[7] = gyro_rate[1];
+                    event_gyro_rate[8] = gyro_rate[2];
+                    break;
+                case 3:
+                    event_gyro_rate[9] = gyro_rate[0];
+                    event_gyro_rate[10] = gyro_rate[1];
+                    event_gyro_rate[11] = gyro_rate[2];
+                    break;
+            }
+        }
+    }
+
     public void onSensorChanged(SensorEvent event) {
         if(getListLength() == 0){
             TS_i = event.timestamp;
@@ -204,18 +274,31 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         if(event.accuracy>=SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM) {
             if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
                 lin_acc = preprocessSensorData( event.values );
+                if(count_acc<4){
+                    storeInEventBuffer(1,count_acc);
+                    count_acc++;
+                }else{
+                    count_acc = 0;
+                    storeInEventBuffer(1,count_acc);
+                }
             }else{
                 gyro_rate = preprocessSensorValues(event.values);
+                if(count_gyro<4){
+                    storeInEventBuffer(2,count_gyro);
+                    count_gyro++;
+                }else{
+                    count_gyro = 0;
+                    storeInEventBuffer(2,count_gyro);
+                }
             }
             //float[] linear_acceleration = preprocessSensorData( event.values );
             float accVal = calculateAcc( lin_acc );
             String ts_c = String.format("%.1f",(float)(event.timestamp - TS_i)/(float)toSec);
 
-            if(rightOn == true && lin_acc[0] != -1000 && gyro_rate[0] != -1000){
-                String prediction = getPredictionFrom( input_age, lin_acc[0],lin_acc[1], lin_acc[2], gyro_rate[0],
-                gyro_rate[1], gyro_rate[2]);
+            if(rightOn && lin_acc[0] != -1000 && gyro_rate[0] != -1000 && count_acc == 4 && count_gyro == 4){
+                String prediction = getPredictionFrom( input_age);
                 motion_pred.setText( prediction );
-            }else{
+            }else if(!rightOn){
                 v.cancel();
                 motion_pred.setText( "prediction Off" );
             }
@@ -246,7 +329,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     private MappedByteBuffer loadPredictionModel() throws IOException{
-        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v2.9.tflite" );
+        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.4_80p.tflite" );
         //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.1.tflite" );
         FileInputStream fileInputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = fileInputStream.getChannel();
