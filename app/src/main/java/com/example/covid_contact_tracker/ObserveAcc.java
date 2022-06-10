@@ -204,16 +204,20 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 //        inputVals[0][6] = zg;
 
 
-        float[][] outputVals = new float[1][2];
+        float[][] outputVals = new float[1][3];
         model_intrepret.run( inputVals,outputVals );
-        if(outputVals[0][1]>outputVals[0][0]){
+        if(outputVals[0][0]>outputVals[0][1] && outputVals[0][0]>outputVals[0][2]){
+            //pred_hist.setText(pred_hist.getText()+"\nWalking");
+            v.cancel();
+            return "Resting"+outputVals[0][0];
+        }else if(outputVals[0][1]>outputVals[0][0] && outputVals[0][1]>outputVals[0][2]){
             //pred_hist.setText(pred_hist.getText()+"\nWalking");
             v.cancel();
             return "Walking"+outputVals[0][1];
-        }else{
+        } else{
 
             v.vibrate(new long[] {0, 4000,100}, 0);
-            return "Running"+outputVals[0][0];
+            return "Running"+outputVals[0][2];
         }
     }
 
@@ -329,7 +333,9 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     }
 
     private MappedByteBuffer loadPredictionModel() throws IOException{
-        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.4_80p.tflite" );
+        //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.4_80p.tflite" );
+        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_random_model_v1.1.tflite" );
+
         //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.1.tflite" );
         FileInputStream fileInputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = fileInputStream.getChannel();
