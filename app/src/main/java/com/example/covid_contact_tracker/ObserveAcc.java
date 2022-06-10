@@ -45,8 +45,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     EditText age_inp;
     Interpreter model_intrepret;
     Vibrator v;
-    boolean registered = false,switchOn = false,keepScreenOn = true, rightOn = false, walkOn = false,captureOn = false;
-    Switch gravity_switch,right_switch,walk_switch;
+    boolean registered = false,switchOn = false,keepScreenOn = true, rightOn = false, walkOn = false,captureOn = false,stopOn = false;
+    Switch gravity_switch,right_switch,walk_switch,stop_switch;
     float[] gravity = new float[3];
     long TS_i,toSec = 1000000000L;
     int input_age,count_acc=0,count_gyro=0;
@@ -67,6 +67,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
         gravity_switch = findViewById( R.id.gravity_switch );
         right_switch = findViewById( R.id.position );
         walk_switch = findViewById( R.id.walkOrRun );
+        stop_switch = findViewById( R.id.motionOrStop );
         sensorManager = (SensorManager) getSystemService( Context.SENSOR_SERVICE );
         if(sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER )!= null){
             sensor = sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );
@@ -130,6 +131,20 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
                         walkOn = false;
                     }
                 }
+        });
+        stop_switch.setOnCheckedChangeListener( new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b){
+                createAccCSV( null );
+                if(b){
+                    Toast.makeText( ObserveAcc.this, "Walk On", Toast.LENGTH_SHORT ).show();
+                    stopOn = true;
+                    walkOn = false;
+                }else{
+                    Toast.makeText( ObserveAcc.this, "Run On", Toast.LENGTH_SHORT ).show();
+                    stopOn = false;
+                }
+            }
         });
     }
 
@@ -310,7 +325,9 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             if(captureOn && lin_acc[0] != -1000 && gyro_rate[0] != -1000) {
                 String[] vals = {(ts_c),
                         String.valueOf( input_age ),
-                        String.valueOf( walkOn ? 1 : 0 ),
+                        String.valueOf( stopOn ? 1 : 0 ),
+                        String.valueOf( !stopOn && walkOn ? 1 : 0 ),
+                        String.valueOf( !stopOn && !walkOn ? 1 : 0 ),
                         String.valueOf( lin_acc[0] ),
                         String.valueOf( lin_acc[1] ),
                         String.valueOf( lin_acc[2] ),
