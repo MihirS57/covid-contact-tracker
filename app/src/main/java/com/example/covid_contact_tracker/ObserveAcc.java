@@ -351,7 +351,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 
     private MappedByteBuffer loadPredictionModel() throws IOException{
         //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.4_80p.tflite" );
-        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_random_model_v1.1.tflite" );
+        AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_random_model_v1.2.tflite" );
 
         //AssetFileDescriptor fileDescriptor = this.getAssets().openFd( "run_walk_model_v1.1.tflite" );
         FileInputStream fileInputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
@@ -395,7 +395,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
 
     public void addToList(String[] vals){
         if(data.size() == 0){
-            data.add( new String[]{"TS","Age","Mode","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
+            data.add( new String[]{"TS","Age","Random","Walk","Run","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
         }
         data.add( vals );
     }
@@ -403,7 +403,7 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
     public void clearList(){
         captureOn = false;
         data.clear();
-        data.add( new String[]{"TS","Age","Mode","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
+        data.add( new String[]{"TS","Age","Random","Walk","Run","X_a","Y_a","Z_a","X_g","Y_g","Z_g","Acc"} );
     }
 
     public void createAccCSV(View view){
@@ -414,7 +414,8 @@ public class ObserveAcc extends AppCompatActivity implements SensorEventListener
             String formattedDate = df.format(c.getTime());
             CSVWriter writer = null;
             String address = "";
-            String Wmode = walkOn?"walk":"run";
+
+            String Wmode = stopOn ? "random" : walkOn ? "walk" : "run";
             //String mode = (rightOn?"R":"L")+Wmode;
             if(switchOn){
                 address = Environment.getExternalStorageDirectory().getAbsolutePath() +"LR/AccWG.csv";
