@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\config",
+    "\\controllers",
+    "\\middleware",
+    "\\models",
+    "\\routes"
+  ],
+  "SelectedNode": "\\models\\contact.js",
+  "PreviewInSolutionExplorer": false
+}

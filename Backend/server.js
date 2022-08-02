@@ -10,9 +10,11 @@ connectDb();
 
 app.use(express.json());
 const contacts = require('./routes/contacts');
+const users = require('./routes/users')
 
 app.use(errorHandle);
-app.use('/api/v1/covid',contacts);
+app.use('/api/v1/covid/contacts', contacts);
+app.use('/api/v1/covid/users', users);
 const server = app.listen(PORT, () => {
     console.log('App listening on port ',PORT);
 });

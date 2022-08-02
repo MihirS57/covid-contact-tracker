@@ -1,4 +1,114 @@
 const Contact = require('../models/contact')
+const User = require('../models/users')
+/**
+ * 
+ * @param {any} req
+ * @param {any} res
+ * @param {any} next
+ * {
+ *  reportingMac: "XXX",
+ *  reportedContacts: [
+ *      {
+ *          contact_mac: "XX1",
+ *          date: "XX-XX-XXXX",
+ *          proximity: XX
+ *      },
+ *      {
+ *          contact_mac: "XX2",
+ *          date: "X2-XX-XXXX",
+ *          proximity: X2
+ *      },
+ *      {
+ *          contact_mac: "XX3",
+ *          date: "X3-XX-XXXX",
+ *          proximity: X3
+ *      }
+ *  ]
+ * }
+ */
+exports.reportContacts = async (req, res, next) => {
+    try {
+        var main_mac = req.body.reportingMac;
+        var rep_contacts = req.body.reportedContacts;
+        const main_user = await User.findOne({
+            user_mac: main_mac
+        })
+        var main_mac_contacts = main_user.contacts;
+        var updated_contacts = []
+        var secondary_macs = []
+        console.log(rep_contacts)
+        for (let i = 0; i < rep_contacts.length; i++) {
+            let cont = rep_contacts[i]
+            console.log(cont)
+            let searched_contact = await Contact.findOne({
+                    joint_mac: main_mac + ":" + cont.contact_mac
+            })
+            if (!searched_contact) {
+                searched_contact = await Contact.findOne({
+                    joint_mac: cont.contact_mac + ":" + main_mac
+                })
+            }
+            
+            
+            if (!searched_contact) {
+                // create new contact and push its id in contacts list of main user
+                
+                const contact_mac_two = await User.findOne({ user_mac: cont.contact_mac })
+                var contact_mac_two_contacts = contact_mac_two.contacts;
+                console.log(cont.contact_mac, main_user._id, contact_mac_two._id)
+                const new_contact = await Contact.create({
+                    joint_mac: main_mac + ":" + cont.contact_mac,
+                    contact_mac_one: main_user._id,
+                    contact_mac_two: contact_mac_two._id,
+                    date: cont.date,
+                    proximity: cont.proximity
+                })
+                updated_contacts.push(new_contact)
+                main_mac_contacts.push(new_contact._id);
+                contact_mac_two_contacts.push(new_contact._id)
+                const updated_contact_mac_two = await User.findByIdAndUpdate(contact_mac_two._id, {
+                    contacts: contact_mac_two_contacts
+                }, {
+                    new: true,
+                    newValidators: true
+                })
+                secondary_macs.push(updated_contact_mac_two)
+            } else {
+                console.log(searched_contact, searched_contact._id)
+                const updatedContact = await Contact.findByIdAndUpdate(searched_contact._id, {
+                    date: cont.date,
+                    proximity: cont.proximity > searched_contact.proximity ?
+                        cont.proximity : searched_contact.proximity
+                },{
+                    new: true,
+                    newValidators: true
+                })
+                updated_contacts.push(updatedContact)
+            }
+            
+        }
+        const updated_user = await User.findByIdAndUpdate(main_user._id, {
+            contacts: main_mac_contacts
+        }, {
+            new: true,
+            newValidators: true
+        })
+        return res.status(200).json({
+            success: true,
+            main_user: updated_user,
+            secondary_users: secondary_macs,
+            updated_contacts: updated_contacts
+        })
+    } catch (err) {
+        console.log(err.stack);
+        res.status(400)
+            .json({
+                success: false,
+                message: err.message,
+                error: err.stack
+            })
+    }
+}
 
 //insert or update existing key count
 exports.insertMAC = async (req,res,next) => {
